@@ -1,11 +1,10 @@
 package com.yigemingzi.hotbarslotplus;
 
 public final class ExtraHotbarLayout {
-    public static final int SLOT_SIZE = 18;
-    public static final int SLOT_SPACING = 2;
-    public static final int ROW_WIDTH = SLOT_SIZE * 9;
-    public static final int ROW_HEIGHT = SLOT_SIZE;
-    public static final int ROW_GAP = 4;
+    public static final int SLOT_SIZE = ExtraHotbarHudLayout.SLOT_PITCH;
+    public static final int ROW_WIDTH = ExtraHotbarHudLayout.HOTBAR_WIDTH;
+    public static final int ROW_HEIGHT = ExtraHotbarHudLayout.HOTBAR_HEIGHT;
+    public static final int ROW_GAP = 0;
     public static final int DEDICATED_SLOT_START = 46;
     public static final int DEDICATED_ROW_COUNT = 7;
     public static final int DEDICATED_SLOT_COUNT = DEDICATED_ROW_COUNT * 9;
@@ -38,13 +37,14 @@ public final class ExtraHotbarLayout {
     }
 
     public static int columnAt(double mouseX, int left) {
-        int relativeX = (int) Math.floor(mouseX) - left;
-        if (relativeX < 0 || relativeX >= ROW_WIDTH) {
+        int relativeX = (int) Math.floor(mouseX) - left - ExtraHotbarHudLayout.ITEM_OFFSET;
+        if (relativeX < 0 || relativeX >= SLOT_SIZE * 9) {
             return -1;
         }
 
         int column = relativeX / SLOT_SIZE;
-        return column >= 0 && column < 9 ? column : -1;
+        int columnX = relativeX - column * SLOT_SIZE;
+        return column >= 0 && column < 9 && columnX < 16 ? column : -1;
     }
 
     public static int rowAt(double mouseY, int top, int rows) {

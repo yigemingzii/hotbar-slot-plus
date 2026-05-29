@@ -50,8 +50,9 @@ public abstract class InventoryScreenMixin extends AbstractInventoryScreen<Playe
             return;
         }
 
-        int logicalRow = com.yigemingzi.hotbarslotplus.HotbarScrollController.logicalRowForVisibleOffset(row, rows);
-        int slotId = ExtraHotbarLayout.inventoryScreenSlotId(HotbarSlotPlusConfig.get().storageMode(), logicalRow, column);
+        int logicalRow = com.yigemingzi.hotbarslotplus.HotbarScrollController.logicalRowForVisibleOffset(rows - 1 - row, rows);
+        int storageRow = com.yigemingzi.hotbarslotplus.HotbarScrollController.actualStorageRowForLogicalRow(logicalRow);
+        int slotId = ExtraHotbarLayout.inventoryScreenSlotId(HotbarSlotPlusConfig.get().storageMode(), storageRow, column);
         this.client.interactionManager.clickSlot(this.handler.syncId, slotId, button, SlotActionType.PICKUP, this.client.player);
         cir.setReturnValue(true);
     }
@@ -65,7 +66,7 @@ public abstract class InventoryScreenMixin extends AbstractInventoryScreen<Playe
     }
 
     private int hotbarSlotPlus$panelTop(int rows) {
-        int panelHeight = rows * (ExtraHotbarLayout.ROW_HEIGHT + ExtraHotbarLayout.ROW_GAP) - ExtraHotbarLayout.ROW_GAP;
+        int panelHeight = rows * ExtraHotbarLayout.ROW_HEIGHT;
         return this.y + (this.backgroundHeight - panelHeight) / 2;
     }
 }

@@ -3,7 +3,6 @@ package com.yigemingzi.hotbarslotplus;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
-import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
@@ -33,7 +32,6 @@ public final class HotbarSlotPlusClient implements ClientModInitializer {
         ));
 
         ClientTickEvents.END_CLIENT_TICK.register(HotbarSlotPlusClient::handleKeys);
-        HudRenderCallback.EVENT.register((context, tickCounter) -> ExtraHotbarRenderer.renderHud(context));
     }
 
     private static void handleKeys(MinecraftClient client) {
@@ -46,4 +44,3 @@ public final class HotbarSlotPlusClient implements ClientModInitializer {
         }
     }
 }
-
