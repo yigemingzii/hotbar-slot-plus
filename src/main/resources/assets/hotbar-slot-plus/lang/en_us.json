@@ -1,0 +1,16 @@
+{
+  "key.categories.hotbar-slot-plus": "Hotbar Slot Plus",
+  "key.hotbar-slot-plus.more_rows": "Show more hotbar rows",
+  "key.hotbar-slot-plus.fewer_rows": "Show fewer hotbar rows",
+  "text.hotbar-slot-plus.config.title": "Hotbar Slot Plus",
+  "text.hotbar-slot-plus.config.general": "General",
+  "text.hotbar-slot-plus.config.hud_rows": "HUD hotbar rows",
+  "text.hotbar-slot-plus.config.inventory_rows": "Inventory hotbar rows",
+  "text.hotbar-slot-plus.config.total_rows": "Total hotbar rows",
+  "text.hotbar-slot-plus.config.panel_side": "Inventory panel side",
+  "text.hotbar-slot-plus.config.storage_mode": "Extra slot mode",
+  "text.hotbar-slot-plus.panel_side.left": "Left",
+  "text.hotbar-slot-plus.panel_side.right": "Right",
+  "text.hotbar-slot-plus.storage_mode.inventory_rows": "Use inventory rows",
+  "text.hotbar-slot-plus.storage_mode.dedicated_slots": "Use dedicated slots"
+}

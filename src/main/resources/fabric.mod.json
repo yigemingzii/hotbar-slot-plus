@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "id": "hotbar-slot-plus",
+  "version": "${version}",
+  "name": "Hotbar Slot Plus",
+  "description": "显示更多快捷栏，并支持滚轮跨栏选择与额外槽位模式。",
+  "authors": [
+    "yigemingzii"
+  ],
+  "contact": {
+    "homepage": "https://github.com/yigemingzii/hotbar-slot-plus",
+    "sources": "https://github.com/yigemingzii/hotbar-slot-plus"
+  },
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "client": [
+      "com.yigemingzi.hotbarslotplus.HotbarSlotPlusClient"
+    ],
+    "modmenu": [
+      "com.yigemingzi.hotbarslotplus.compat.HotbarSlotPlusModMenu"
+    ]
+  },
+  "mixins": [
+    "hotbar-slot-plus.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "minecraft": "~1.21.1",
+    "java": ">=21",
+    "fabric-api": "*"
+  },
+  "suggests": {
+    "modmenu": "*",
+    "cloth-config": "*"
+  }
+}

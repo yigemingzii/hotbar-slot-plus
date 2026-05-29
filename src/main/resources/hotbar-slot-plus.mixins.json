@@ -1,0 +1,16 @@
+{
+  "required": true,
+  "package": "com.yigemingzi.hotbarslotplus.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "PlayerEntityMixin",
+    "PlayerScreenHandlerMixin"
+  ],
+  "client": [
+    "InventoryScreenMixin",
+    "PlayerInventoryMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "key.categories.hotbar-slot-plus": "快捷栏增强",
+  "key.hotbar-slot-plus.more_rows": "显示更多快捷栏",
+  "key.hotbar-slot-plus.fewer_rows": "显示更少快捷栏",
+  "text.hotbar-slot-plus.config.title": "快捷栏增强",
+  "text.hotbar-slot-plus.config.general": "通用",
+  "text.hotbar-slot-plus.config.hud_rows": "HUD 快捷栏行数",
+  "text.hotbar-slot-plus.config.inventory_rows": "背包快捷栏行数",
+  "text.hotbar-slot-plus.config.total_rows": "快捷栏总行数",
+  "text.hotbar-slot-plus.config.panel_side": "背包面板位置",
+  "text.hotbar-slot-plus.config.storage_mode": "额外槽位模式",
+  "text.hotbar-slot-plus.panel_side.left": "左侧",
+  "text.hotbar-slot-plus.panel_side.right": "右侧",
+  "text.hotbar-slot-plus.storage_mode.inventory_rows": "复用背包格",
+  "text.hotbar-slot-plus.storage_mode.dedicated_slots": "专属槽位"
+}
