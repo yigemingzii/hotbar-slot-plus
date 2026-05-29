@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "id": "hotbar-slot-plus",
+  "version": "${version}",
+  "name": "Hotbar Slot Plus",
+  "description": "Shows additional player inventory rows as extra hotbars.",
+  "authors": [
+    "yigemingzii"
+  ],
+  "contact": {
+    "homepage": "https://github.com/yigemingzii/hotbar-slot-plus",
+    "sources": "https://github.com/yigemingzii/hotbar-slot-plus"
+  },
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "client": [
+      "com.yigemingzi.hotbarslotplus.HotbarSlotPlusClient"
+    ],
+    "modmenu": [
+      "com.yigemingzi.hotbarslotplus.compat.HotbarSlotPlusModMenu"
+    ]
+  },
+  "mixins": [
+    "hotbar-slot-plus.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "minecraft": "~1.21.1",
+    "java": ">=21",
+    "fabric-api": "*"
+  },
+  "suggests": {
+    "modmenu": "*",
+    "cloth-config": "*"
+  }
+}
