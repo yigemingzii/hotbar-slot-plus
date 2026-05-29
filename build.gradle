@@ -48,6 +48,11 @@ java {
     targetCompatibility = JavaVersion.VERSION_21
 }
 
+tasks.named("sourcesJar", Jar) {
+    exclude "fabric.mod.json"
+    exclude "*.mixins.json"
+}
+
 publishing {
     publications {
         create("mavenJava", MavenPublication) {
