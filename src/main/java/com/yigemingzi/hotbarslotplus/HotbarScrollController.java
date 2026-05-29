@@ -58,9 +58,41 @@ public final class HotbarScrollController {
     public static int logicalRowForVisibleOffset(int visibleOffset, int visibleRowsHint) {
         HotbarSlotPlusConfig config = HotbarSlotPlusConfig.get();
         int totalRows = config.effectiveTotalRows();
-        int visibleRows = Math.min(visibleRowsHint, totalRows);
+        int visibleRows = clampedVisibleRows(visibleRowsHint, totalRows);
         normalizeState(totalRows, visibleRows);
         return Math.min(totalRows - 1, pageStartRow + visibleOffset);
+    }
+
+    public static int[] visibleRowsInDisplayOrder(int visibleRowsHint) {
+        HotbarSlotPlusConfig config = HotbarSlotPlusConfig.get();
+        int totalRows = config.effectiveTotalRows();
+        int visibleRows = clampedVisibleRows(visibleRowsHint, totalRows);
+        normalizeState(totalRows, visibleRows);
+
+        int[] rows = new int[visibleRows];
+        for (int index = 0; index < visibleRows; index++) {
+            rows[index] = Math.min(totalRows - 1, pageStartRow + index);
+        }
+        return rows;
+    }
+
+    public static int activeRow() {
+        int totalRows = HotbarSlotPlusConfig.get().effectiveTotalRows();
+        activeRow = Math.max(0, Math.min(activeRow, totalRows - 1));
+        return activeRow;
+    }
+
+    public static int actualStorageRowForLogicalRow(int logicalRow) {
+        int active = activeRow();
+        if (logicalRow == active) {
+            return 0;
+        }
+
+        if (logicalRow == 0 && active != 0) {
+            return active;
+        }
+
+        return logicalRow;
     }
 
     private static void changePage(MinecraftClient client, PlayerInventory inventory, int step, int totalRows, int visibleRows) {
@@ -68,11 +100,13 @@ public final class HotbarScrollController {
             return;
         }
 
+        normalizeState(totalRows, visibleRows);
+        int localRow = activeRow - pageStartRow;
         int pageCount = Math.max(1, (int) Math.ceil(totalRows / (double) visibleRows));
         int page = pageStartRow / visibleRows;
         int nextPage = Math.floorMod(page + step, pageCount);
         pageStartRow = Math.min(nextPage * visibleRows, Math.max(0, totalRows - visibleRows));
-        setActiveRow(client, inventory, pageStartRow);
+        setActiveRow(client, inventory, Math.min(pageStartRow + localRow, totalRows - 1));
     }
 
     private static void setActiveRow(MinecraftClient client, PlayerInventory inventory, int nextRow) {
@@ -114,6 +148,10 @@ public final class HotbarScrollController {
 
     private static int scrollStep(double amount) {
         return -((int) Math.signum(amount));
+    }
+
+    private static int clampedVisibleRows(int visibleRowsHint, int totalRows) {
+        return Math.max(1, Math.min(visibleRowsHint, totalRows));
     }
 
     private static boolean isAltDown(MinecraftClient client) {
