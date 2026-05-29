@@ -24,6 +24,10 @@ public abstract class InventoryScreenMixin extends AbstractInventoryScreen<Playe
 
     @Inject(method = "render", at = @At("TAIL"))
     private void hotbarSlotPlus$renderExtraHotbars(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+        if (!hotbarSlotPlus$shouldShowExtraSlotsPanel()) {
+            return;
+        }
+
         int rows = HotbarSlotPlusConfig.get().inventoryRows();
         ExtraHotbarRenderer.renderInventoryPanel(
                 context,
@@ -38,6 +42,10 @@ public abstract class InventoryScreenMixin extends AbstractInventoryScreen<Playe
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
     private void hotbarSlotPlus$clickExtraHotbar(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> cir) {
         if (this.client == null || this.client.interactionManager == null || this.client.player == null) {
+            return;
+        }
+
+        if (!hotbarSlotPlus$shouldShowExtraSlotsPanel()) {
             return;
         }
 
@@ -68,5 +76,9 @@ public abstract class InventoryScreenMixin extends AbstractInventoryScreen<Playe
     private int hotbarSlotPlus$panelTop(int rows) {
         int panelHeight = rows * ExtraHotbarLayout.ROW_HEIGHT;
         return this.y + (this.backgroundHeight - panelHeight) / 2;
+    }
+
+    private boolean hotbarSlotPlus$shouldShowExtraSlotsPanel() {
+        return HotbarSlotPlusConfig.get().storageMode() == HotbarSlotPlusConfig.StorageMode.DEDICATED_SLOTS;
     }
 }
