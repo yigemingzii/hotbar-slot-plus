@@ -37,14 +37,12 @@ public final class ExtraHotbarLayout {
     }
 
     public static int columnAt(double mouseX, int left) {
-        int relativeX = (int) Math.floor(mouseX) - left - ExtraHotbarHudLayout.ITEM_OFFSET;
+        int relativeX = (int) Math.floor(mouseX) - left - 1;
         if (relativeX < 0 || relativeX >= SLOT_SIZE * 9) {
             return -1;
         }
 
-        int column = relativeX / SLOT_SIZE;
-        int columnX = relativeX - column * SLOT_SIZE;
-        return column >= 0 && column < 9 && columnX < 16 ? column : -1;
+        return relativeX / SLOT_SIZE;
     }
 
     public static int rowAt(double mouseY, int top, int rows) {
@@ -57,5 +55,11 @@ public final class ExtraHotbarLayout {
         int row = relativeY / pitch;
         int rowY = relativeY - row * pitch;
         return row < rows && rowY < ROW_HEIGHT ? row : -1;
+    }
+
+    public static boolean containsPanel(double mouseX, double mouseY, int left, int top, int rows) {
+        int x = (int) Math.floor(mouseX);
+        int y = (int) Math.floor(mouseY);
+        return x >= left && x < left + ROW_WIDTH && y >= top && y < top + rows * ROW_HEIGHT;
     }
 }

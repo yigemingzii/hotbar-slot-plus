@@ -18,6 +18,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(InventoryScreen.class)
 public abstract class InventoryScreenMixin extends AbstractInventoryScreen<PlayerScreenHandler> {
+    private static final int HOTBAR_SLOT_PLUS_PANEL_GAP = 10;
+    private static final int HOTBAR_SLOT_PLUS_SCREEN_MARGIN = 4;
+
     private InventoryScreenMixin(PlayerScreenHandler handler, PlayerInventory inventory, Text title) {
         super(handler, inventory, title);
     }
@@ -52,9 +55,14 @@ public abstract class InventoryScreenMixin extends AbstractInventoryScreen<Playe
         int rows = HotbarSlotPlusConfig.get().inventoryRows();
         int panelLeft = hotbarSlotPlus$panelLeft();
         int panelTop = hotbarSlotPlus$panelTop(rows);
+        if (!ExtraHotbarLayout.containsPanel(mouseX, mouseY, panelLeft, panelTop, rows)) {
+            return;
+        }
+
         int row = ExtraHotbarLayout.rowAt(mouseY, panelTop, rows);
         int column = ExtraHotbarLayout.columnAt(mouseX, panelLeft);
-        if (row < 0 || column < 0) {
+        if (row < 0 || column < 0 || (button != 0 && button != 1)) {
+            cir.setReturnValue(true);
             return;
         }
 
@@ -66,19 +74,40 @@ public abstract class InventoryScreenMixin extends AbstractInventoryScreen<Playe
     }
 
     private int hotbarSlotPlus$panelLeft() {
-        if (HotbarSlotPlusConfig.get().inventoryPanelOnRight()) {
-            return this.x + this.backgroundWidth + 10;
+        int right = this.x + this.backgroundWidth + HOTBAR_SLOT_PLUS_PANEL_GAP;
+        int left = this.x - ExtraHotbarLayout.ROW_WIDTH - HOTBAR_SLOT_PLUS_PANEL_GAP;
+        boolean preferRight = HotbarSlotPlusConfig.get().inventoryPanelOnRight();
+        int preferred = preferRight ? right : left;
+        if (hotbarSlotPlus$fitsHorizontally(preferred)) {
+            return preferred;
         }
 
-        return this.x - ExtraHotbarLayout.ROW_WIDTH - 10;
+        int fallback = preferRight ? left : right;
+        if (hotbarSlotPlus$fitsHorizontally(fallback)) {
+            return fallback;
+        }
+
+        return Math.max(
+                HOTBAR_SLOT_PLUS_SCREEN_MARGIN,
+                Math.min(preferred, this.width - ExtraHotbarLayout.ROW_WIDTH - HOTBAR_SLOT_PLUS_SCREEN_MARGIN)
+        );
     }
 
     private int hotbarSlotPlus$panelTop(int rows) {
         int panelHeight = rows * ExtraHotbarLayout.ROW_HEIGHT;
-        return this.y + (this.backgroundHeight - panelHeight) / 2;
+        int preferred = this.y + (this.backgroundHeight - panelHeight) / 2;
+        return Math.max(
+                HOTBAR_SLOT_PLUS_SCREEN_MARGIN,
+                Math.min(preferred, this.height - panelHeight - HOTBAR_SLOT_PLUS_SCREEN_MARGIN)
+        );
     }
 
     private boolean hotbarSlotPlus$shouldShowExtraSlotsPanel() {
         return HotbarSlotPlusConfig.get().storageMode() == HotbarSlotPlusConfig.StorageMode.DEDICATED_SLOTS;
+    }
+
+    private boolean hotbarSlotPlus$fitsHorizontally(int left) {
+        return left >= HOTBAR_SLOT_PLUS_SCREEN_MARGIN
+                && left + ExtraHotbarLayout.ROW_WIDTH <= this.width - HOTBAR_SLOT_PLUS_SCREEN_MARGIN;
     }
 }
