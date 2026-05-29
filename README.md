@@ -1,23 +1,23 @@
 # Hotbar Slot Plus
 
-A Minecraft Fabric 1.21.1 client mod that shows extra hotbar rows from the player's existing inventory.
+一个适用于 Minecraft Fabric 1.21.1 的快捷栏增强 Mod，支持显示更多快捷栏、滚轮跨栏选择，以及可切换的额外槽位模式。
 
-## Features
+## 功能
 
-- Shows additional hotbar rows above the vanilla hotbar.
-- Shows 1-4 hotbar rows beside the inventory screen opened with `E`.
-- Lets you change the HUD row count with `[` and `]`.
-- Lets the mouse wheel select through the visible hotbar rows.
-- Uses `Alt` + mouse wheel to switch hotbar pages when total rows exceed the visible rows.
-- Supports left/right inventory panel placement.
-- Supports two storage modes:
-  - reuse normal inventory rows
-  - use dedicated extra hotbar slots
-- Adds a Mod Menu + Cloth Config settings screen when those mods are installed.
-- Stores client settings in `config/hotbar-slot-plus.json`.
+- 在原版快捷栏上方显示额外快捷栏。
+- 按 `E` 打开背包时，在背包旁边显示 1-4 行快捷栏。
+- 可以用 `[` 和 `]` 调整 HUD 显示的快捷栏行数。
+- 可以用滚轮在当前可见的快捷栏行内连续选择。
+- 当快捷栏总行数超过当前可见行数时，可以用 `Alt` + 滚轮翻页。
+- 背包旁边的快捷栏面板支持左侧/右侧配置。
+- 支持两种额外槽位模式：
+  - 复用普通背包格
+  - 使用专属额外快捷栏槽位
+- 安装 Mod Menu + Cloth Config 时，可以在设置界面中修改配置。
+- 客户端配置保存在 `config/hotbar-slot-plus.json`。
 
-## Build
+## 构建
 
 ```powershell
-gradle build
+.\gradlew.bat build
 ```

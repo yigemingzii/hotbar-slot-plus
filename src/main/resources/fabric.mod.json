@@ -3,7 +3,7 @@
   "id": "hotbar-slot-plus",
   "version": "${version}",
   "name": "Hotbar Slot Plus",
-  "description": "Shows additional player inventory rows as extra hotbars.",
+  "description": "显示更多快捷栏，并支持滚轮跨栏选择与额外槽位模式。",
   "authors": [
     "yigemingzii"
   ],
