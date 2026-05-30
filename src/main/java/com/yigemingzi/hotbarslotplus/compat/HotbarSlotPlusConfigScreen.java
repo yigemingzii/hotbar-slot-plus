@@ -18,6 +18,9 @@ public final class HotbarSlotPlusConfigScreen {
                 .setTitle(Text.translatable("text.hotbar-slot-plus.config.title"));
         ConfigEntryBuilder entries = builder.entryBuilder();
         ConfigCategory general = builder.getOrCreateCategory(Text.translatable("text.hotbar-slot-plus.config.general"));
+        boolean inventoryRowsMode = config.storageMode() == HotbarSlotPlusConfig.StorageMode.INVENTORY_ROWS;
+        int totalRowsMin = inventoryRowsMode ? 4 : 1;
+        int totalRowsMax = inventoryRowsMode ? 4 : 8;
 
         general.addEntry(entries.startIntSlider(Text.translatable("text.hotbar-slot-plus.config.hud_rows"), config.hudRows(), 1, 4)
                 .setDefaultValue(1)
@@ -27,7 +30,7 @@ public final class HotbarSlotPlusConfigScreen {
                 .setDefaultValue(1)
                 .setSaveConsumer(config::setInventoryRows)
                 .build());
-        general.addEntry(entries.startIntSlider(Text.translatable("text.hotbar-slot-plus.config.total_rows"), config.totalRows(), 1, 8)
+        general.addEntry(entries.startIntSlider(Text.translatable("text.hotbar-slot-plus.config.total_rows"), config.totalRows(), totalRowsMin, totalRowsMax)
                 .setDefaultValue(4)
                 .setSaveConsumer(config::setTotalRows)
                 .build());
