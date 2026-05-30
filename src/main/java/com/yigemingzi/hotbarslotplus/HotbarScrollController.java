@@ -9,6 +9,7 @@ import org.lwjgl.glfw.GLFW;
 public final class HotbarScrollController {
     private static int activeRow;
     private static int pageStartRow;
+    private static HotbarSlotPlusConfig.StorageMode activeStorageMode = HotbarSlotPlusConfig.StorageMode.INVENTORY_ROWS;
 
     private HotbarScrollController() {
     }
@@ -27,9 +28,9 @@ public final class HotbarScrollController {
         HotbarSlotPlusConfig config = HotbarSlotPlusConfig.get();
         int totalRows = config.effectiveTotalRows();
         int visibleRows = Math.min(config.hudRows(), totalRows);
+        normalizeStorageMode(client, inventory);
         if (totalRows <= 1 || visibleRows <= 0) {
-            activeRow = 0;
-            pageStartRow = 0;
+            resetToBaseHotbar(client, inventory);
             return false;
         }
 
@@ -38,7 +39,7 @@ public final class HotbarScrollController {
             return true;
         }
 
-        normalizeState(totalRows, visibleRows);
+        normalizeState(client, inventory, totalRows, visibleRows);
         int localRow = activeRow - pageStartRow;
         int visibleSlots = visibleRows * 9;
         int selectedIndex = localRow * 9 + inventory.selectedSlot;
@@ -59,7 +60,7 @@ public final class HotbarScrollController {
         HotbarSlotPlusConfig config = HotbarSlotPlusConfig.get();
         int totalRows = config.effectiveTotalRows();
         int visibleRows = clampedVisibleRows(visibleRowsHint, totalRows);
-        normalizeState(totalRows, visibleRows);
+        normalizeStateWithCurrentClient(totalRows, visibleRows);
         return Math.min(totalRows - 1, pageStartRow + visibleOffset);
     }
 
@@ -67,7 +68,7 @@ public final class HotbarScrollController {
         HotbarSlotPlusConfig config = HotbarSlotPlusConfig.get();
         int totalRows = config.effectiveTotalRows();
         int visibleRows = clampedVisibleRows(visibleRowsHint, totalRows);
-        normalizeState(totalRows, visibleRows);
+        normalizeStateWithCurrentClient(totalRows, visibleRows);
 
         int[] rows = new int[visibleRows];
         for (int index = 0; index < visibleRows; index++) {
@@ -78,8 +79,34 @@ public final class HotbarScrollController {
 
     public static int activeRow() {
         int totalRows = HotbarSlotPlusConfig.get().effectiveTotalRows();
-        activeRow = Math.max(0, Math.min(activeRow, totalRows - 1));
-        return activeRow;
+        return Math.max(0, Math.min(activeRow, totalRows - 1));
+    }
+
+    public static int prepareForVanillaPick(MinecraftClient client) {
+        if (client.player == null || client.interactionManager == null) {
+            return -1;
+        }
+
+        if (HotbarSlotPlusConfig.get().storageMode() != HotbarSlotPlusConfig.StorageMode.INVENTORY_ROWS || activeRow == 0) {
+            return -1;
+        }
+
+        int rowToRestore = activeRow;
+        resetToBaseHotbar(client, client.player.getInventory());
+        return rowToRestore;
+    }
+
+    public static void restoreAfterVanillaPick(MinecraftClient client, int rowToRestore) {
+        if (rowToRestore <= 0 || client.player == null || client.interactionManager == null) {
+            return;
+        }
+
+        HotbarSlotPlusConfig config = HotbarSlotPlusConfig.get();
+        if (config.storageMode() != HotbarSlotPlusConfig.StorageMode.INVENTORY_ROWS || rowToRestore >= config.effectiveTotalRows()) {
+            return;
+        }
+
+        setActiveRow(client, client.player.getInventory(), rowToRestore);
     }
 
     public static int actualStorageRowForLogicalRow(int logicalRow) {
@@ -100,7 +127,7 @@ public final class HotbarScrollController {
             return;
         }
 
-        normalizeState(totalRows, visibleRows);
+        normalizeState(client, inventory, totalRows, visibleRows);
         int localRow = activeRow - pageStartRow;
         int pageCount = Math.max(1, (int) Math.ceil(totalRows / (double) visibleRows));
         int page = pageStartRow / visibleRows;
@@ -123,26 +150,61 @@ public final class HotbarScrollController {
         }
 
         activeRow = nextRow;
+        activeStorageMode = HotbarSlotPlusConfig.get().storageMode();
         inventory.markDirty();
     }
 
     private static void swapHotbarWithRow(MinecraftClient client, int row) {
+        swapHotbarWithRow(client, row, HotbarSlotPlusConfig.get().storageMode());
+    }
+
+    private static void swapHotbarWithRow(MinecraftClient client, int row, HotbarSlotPlusConfig.StorageMode mode) {
         if (client.player == null || client.interactionManager == null) {
             return;
         }
 
-        HotbarSlotPlusConfig.StorageMode mode = HotbarSlotPlusConfig.get().storageMode();
         for (int column = 0; column < 9; column++) {
             int slotId = ExtraHotbarLayout.inventoryScreenSlotId(mode, row, column);
             client.interactionManager.clickSlot(client.player.playerScreenHandler.syncId, slotId, column, SlotActionType.SWAP, client.player);
         }
     }
 
-    private static void normalizeState(int totalRows, int visibleRows) {
-        activeRow = Math.max(0, Math.min(activeRow, totalRows - 1));
+    private static void normalizeState(MinecraftClient client, PlayerInventory inventory, int totalRows, int visibleRows) {
+        if (activeRow >= totalRows) {
+            resetToBaseHotbar(client, inventory);
+        }
+
         pageStartRow = Math.max(0, Math.min(pageStartRow, Math.max(0, totalRows - visibleRows)));
         if (activeRow < pageStartRow || activeRow >= pageStartRow + visibleRows) {
             activeRow = pageStartRow;
+        }
+    }
+
+    private static void normalizeStorageMode(MinecraftClient client, PlayerInventory inventory) {
+        if (activeStorageMode != HotbarSlotPlusConfig.get().storageMode()) {
+            resetToBaseHotbar(client, inventory);
+        }
+    }
+
+    private static void normalizeStateWithCurrentClient(int totalRows, int visibleRows) {
+        MinecraftClient client = MinecraftClient.getInstance();
+        PlayerInventory inventory = client.player == null ? null : client.player.getInventory();
+        if (inventory != null) {
+            normalizeStorageMode(client, inventory);
+        }
+        normalizeState(client, inventory, totalRows, visibleRows);
+    }
+
+    private static void resetToBaseHotbar(MinecraftClient client, PlayerInventory inventory) {
+        if (activeRow != 0 && client != null && inventory != null) {
+            swapHotbarWithRow(client, activeRow, activeStorageMode);
+        }
+
+        activeRow = 0;
+        pageStartRow = 0;
+        activeStorageMode = HotbarSlotPlusConfig.get().storageMode();
+        if (inventory != null) {
+            inventory.markDirty();
         }
     }
 

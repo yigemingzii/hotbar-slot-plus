@@ -65,12 +65,16 @@ public final class HotbarSlotPlusConfig {
     }
 
     public int totalRows() {
+        if (storageMode == StorageMode.INVENTORY_ROWS) {
+            return 4;
+        }
+
         return totalRows;
     }
 
     public int effectiveTotalRows() {
         if (storageMode == StorageMode.INVENTORY_ROWS) {
-            return Math.min(totalRows, 4);
+            return 4;
         }
 
         return totalRows;
@@ -99,7 +103,7 @@ public final class HotbarSlotPlusConfig {
     }
 
     public void setTotalRows(int rows) {
-        totalRows = clampTotalRows(rows);
+        totalRows = storageMode == StorageMode.INVENTORY_ROWS ? 4 : clampTotalRows(rows);
         save();
     }
 
@@ -110,6 +114,9 @@ public final class HotbarSlotPlusConfig {
 
     public void setStorageMode(StorageMode mode) {
         storageMode = mode == null ? StorageMode.INVENTORY_ROWS : mode;
+        if (storageMode == StorageMode.INVENTORY_ROWS) {
+            totalRows = 4;
+        }
         save();
     }
 
@@ -122,6 +129,9 @@ public final class HotbarSlotPlusConfig {
         }
         if (storageMode == null) {
             storageMode = StorageMode.INVENTORY_ROWS;
+        }
+        if (storageMode == StorageMode.INVENTORY_ROWS) {
+            totalRows = 4;
         }
     }
 
