@@ -3,6 +3,7 @@ package com.yigemingzi.hotbarslotplus;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.item.ItemStack;
 import net.minecraft.screen.slot.SlotActionType;
 import org.lwjgl.glfw.GLFW;
 
@@ -163,9 +164,27 @@ public final class HotbarScrollController {
             return;
         }
 
+        if (mode == HotbarSlotPlusConfig.StorageMode.INVENTORY_ROWS && client.interactionManager.hasCreativeInventory()) {
+            swapInventoryRowsInCreative(client, client.player.getInventory(), row);
+            return;
+        }
+
         for (int column = 0; column < 9; column++) {
             int slotId = ExtraHotbarLayout.inventoryScreenSlotId(mode, row, column);
             client.interactionManager.clickSlot(client.player.playerScreenHandler.syncId, slotId, column, SlotActionType.SWAP, client.player);
+        }
+    }
+
+    private static void swapInventoryRowsInCreative(MinecraftClient client, PlayerInventory inventory, int row) {
+        for (int column = 0; column < 9; column++) {
+            int baseIndex = ExtraHotbarLayout.playerInventoryIndex(0, column);
+            int rowIndex = ExtraHotbarLayout.playerInventoryIndex(row, column);
+            ItemStack baseStack = inventory.getStack(baseIndex);
+            ItemStack rowStack = inventory.getStack(rowIndex);
+            inventory.setStack(baseIndex, rowStack);
+            inventory.setStack(rowIndex, baseStack);
+            client.interactionManager.clickCreativeStack(rowStack, 36 + column);
+            client.interactionManager.clickCreativeStack(baseStack, rowIndex);
         }
     }
 
