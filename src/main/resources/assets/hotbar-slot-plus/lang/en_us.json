@@ -9,6 +9,7 @@
   "text.hotbar-slot-plus.config.total_rows": "Total hotbar rows",
   "text.hotbar-slot-plus.config.panel_side": "Inventory panel side",
   "text.hotbar-slot-plus.config.storage_mode": "Extra slot mode",
+  "text.hotbar-slot-plus.inventory.no_space": "No space",
   "text.hotbar-slot-plus.panel_side.left": "Left",
   "text.hotbar-slot-plus.panel_side.right": "Right",
   "text.hotbar-slot-plus.storage_mode.inventory_rows": "Use inventory rows",

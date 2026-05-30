@@ -9,6 +9,7 @@
   "text.hotbar-slot-plus.config.total_rows": "快捷栏总行数",
   "text.hotbar-slot-plus.config.panel_side": "背包面板位置",
   "text.hotbar-slot-plus.config.storage_mode": "额外槽位模式",
+  "text.hotbar-slot-plus.inventory.no_space": "空间不足",
   "text.hotbar-slot-plus.panel_side.left": "左侧",
   "text.hotbar-slot-plus.panel_side.right": "右侧",
   "text.hotbar-slot-plus.storage_mode.inventory_rows": "复用背包格",

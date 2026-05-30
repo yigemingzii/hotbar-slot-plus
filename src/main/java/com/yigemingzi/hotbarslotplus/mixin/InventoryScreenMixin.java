@@ -6,6 +6,7 @@ import com.yigemingzi.hotbarslotplus.HotbarSlotPlusConfig;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ingame.AbstractInventoryScreen;
 import net.minecraft.client.gui.screen.ingame.InventoryScreen;
+import net.minecraft.client.gui.screen.recipebook.RecipeBookWidget;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.screen.PlayerScreenHandler;
 import net.minecraft.screen.slot.SlotActionType;
@@ -20,8 +21,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class InventoryScreenMixin extends AbstractInventoryScreen<PlayerScreenHandler> {
     private static final int HOTBAR_SLOT_PLUS_PANEL_GAP = 10;
     private static final int HOTBAR_SLOT_PLUS_SCREEN_MARGIN = 4;
-    private static final int HOTBAR_SLOT_PLUS_WARNING_SIZE = 12;
+    private static final int HOTBAR_SLOT_PLUS_RECIPE_BOOK_WIDTH = 147;
+    private static final int HOTBAR_SLOT_PLUS_RECIPE_BOOK_HEIGHT = 166;
+    private static final int HOTBAR_SLOT_PLUS_RECIPE_BOOK_TAB_WIDTH = 32;
+    private static final int HOTBAR_SLOT_PLUS_RECIPE_BOOK_LEFT_OFFSET = 86;
+    private static final int HOTBAR_SLOT_PLUS_WARNING_WIDTH = 74;
+    private static final int HOTBAR_SLOT_PLUS_WARNING_HEIGHT = 24;
+    private static final int HOTBAR_SLOT_PLUS_WARNING_BACKGROUND = 0xAA220000;
     private static final int HOTBAR_SLOT_PLUS_WARNING_COLOR = 0xFFFF3030;
+    private static final int HOTBAR_SLOT_PLUS_WARNING_TEXT_COLOR = 0xFFFF7070;
 
     private InventoryScreenMixin(PlayerScreenHandler handler, PlayerInventory inventory, Text title) {
         super(handler, inventory, title);
@@ -88,9 +96,10 @@ public abstract class InventoryScreenMixin extends AbstractInventoryScreen<Playe
 
     private int[] hotbarSlotPlus$panelPlacement(int rows) {
         int panelHeight = rows * ExtraHotbarLayout.ROW_HEIGHT;
-        int right = this.x + this.backgroundWidth + HOTBAR_SLOT_PLUS_PANEL_GAP;
-        int left = this.x - ExtraHotbarLayout.ROW_WIDTH - HOTBAR_SLOT_PLUS_PANEL_GAP;
-        int centeredTop = hotbarSlotPlus$clampPanelTop(this.y + (this.backgroundHeight - panelHeight) / 2, panelHeight);
+        int[] occupiedBounds = hotbarSlotPlus$occupiedBounds();
+        int right = occupiedBounds[2] + HOTBAR_SLOT_PLUS_PANEL_GAP;
+        int left = occupiedBounds[0] - ExtraHotbarLayout.ROW_WIDTH - HOTBAR_SLOT_PLUS_PANEL_GAP;
+        int centeredTop = hotbarSlotPlus$clampPanelTop(occupiedBounds[1] + (occupiedBounds[3] - occupiedBounds[1] - panelHeight) / 2, panelHeight);
         boolean preferRight = HotbarSlotPlusConfig.get().inventoryPanelOnRight();
         int[] preferred = hotbarSlotPlus$validPlacement(preferRight ? right : left, centeredTop, panelHeight);
         if (preferred != null) {
@@ -102,13 +111,13 @@ public abstract class InventoryScreenMixin extends AbstractInventoryScreen<Playe
             return fallback;
         }
 
-        int centeredLeft = hotbarSlotPlus$clampPanelLeft(this.x + (this.backgroundWidth - ExtraHotbarLayout.ROW_WIDTH) / 2);
-        int[] below = hotbarSlotPlus$validPlacement(centeredLeft, this.y + this.backgroundHeight + HOTBAR_SLOT_PLUS_PANEL_GAP, panelHeight);
+        int centeredLeft = hotbarSlotPlus$clampPanelLeft(occupiedBounds[0] + (occupiedBounds[2] - occupiedBounds[0] - ExtraHotbarLayout.ROW_WIDTH) / 2);
+        int[] below = hotbarSlotPlus$validPlacement(centeredLeft, occupiedBounds[3] + HOTBAR_SLOT_PLUS_PANEL_GAP, panelHeight);
         if (below != null) {
             return below;
         }
 
-        return hotbarSlotPlus$validPlacement(centeredLeft, this.y - panelHeight - HOTBAR_SLOT_PLUS_PANEL_GAP, panelHeight);
+        return hotbarSlotPlus$validPlacement(centeredLeft, occupiedBounds[1] - panelHeight - HOTBAR_SLOT_PLUS_PANEL_GAP, panelHeight);
     }
 
     private boolean hotbarSlotPlus$shouldShowExtraSlotsPanel() {
@@ -120,7 +129,7 @@ public abstract class InventoryScreenMixin extends AbstractInventoryScreen<Playe
                 || top < HOTBAR_SLOT_PLUS_SCREEN_MARGIN
                 || left + ExtraHotbarLayout.ROW_WIDTH > this.width - HOTBAR_SLOT_PLUS_SCREEN_MARGIN
                 || top + panelHeight > this.height - HOTBAR_SLOT_PLUS_SCREEN_MARGIN
-                || hotbarSlotPlus$intersectsInventory(left, top, ExtraHotbarLayout.ROW_WIDTH, panelHeight)) {
+                || hotbarSlotPlus$intersectsBlockedArea(left, top, ExtraHotbarLayout.ROW_WIDTH, panelHeight)) {
             return null;
         }
 
@@ -141,41 +150,103 @@ public abstract class InventoryScreenMixin extends AbstractInventoryScreen<Playe
         );
     }
 
-    private boolean hotbarSlotPlus$intersectsInventory(int left, int top, int width, int height) {
-        return left < this.x + this.backgroundWidth
-                && left + width > this.x
-                && top < this.y + this.backgroundHeight
-                && top + height > this.y;
+    private boolean hotbarSlotPlus$intersectsBlockedArea(int left, int top, int width, int height) {
+        if (hotbarSlotPlus$intersects(left, top, width, height, this.x, this.y, this.backgroundWidth, this.backgroundHeight)) {
+            return true;
+        }
+
+        int[] recipeBookBounds = hotbarSlotPlus$recipeBookBounds();
+        return recipeBookBounds != null
+                && hotbarSlotPlus$intersects(
+                left,
+                top,
+                width,
+                height,
+                recipeBookBounds[0],
+                recipeBookBounds[1],
+                recipeBookBounds[2] - recipeBookBounds[0],
+                recipeBookBounds[3] - recipeBookBounds[1]
+        );
+    }
+
+    private boolean hotbarSlotPlus$intersects(int left, int top, int width, int height, int blockedLeft, int blockedTop, int blockedWidth, int blockedHeight) {
+        return left < blockedLeft + blockedWidth
+                && left + width > blockedLeft
+                && top < blockedTop + blockedHeight
+                && top + height > blockedTop;
+    }
+
+    private int[] hotbarSlotPlus$occupiedBounds() {
+        int left = this.x;
+        int top = this.y;
+        int right = this.x + this.backgroundWidth;
+        int bottom = this.y + this.backgroundHeight;
+
+        int[] recipeBookBounds = hotbarSlotPlus$recipeBookBounds();
+        if (recipeBookBounds != null) {
+            left = Math.min(left, recipeBookBounds[0]);
+            top = Math.min(top, recipeBookBounds[1]);
+            right = Math.max(right, recipeBookBounds[2]);
+            bottom = Math.max(bottom, recipeBookBounds[3]);
+        }
+
+        return new int[]{left, top, right, bottom};
+    }
+
+    private int[] hotbarSlotPlus$recipeBookBounds() {
+        RecipeBookWidget recipeBook = ((InventoryScreen) (Object) this).getRecipeBookWidget();
+        if (recipeBook == null || !recipeBook.isOpen()) {
+            return null;
+        }
+
+        int centeredInventoryLeft = (this.width - this.backgroundWidth) / 2;
+        boolean recipeBookShiftedInventory = this.x > centeredInventoryLeft + HOTBAR_SLOT_PLUS_RECIPE_BOOK_LEFT_OFFSET / 2;
+        int leftOffset = recipeBookShiftedInventory ? HOTBAR_SLOT_PLUS_RECIPE_BOOK_LEFT_OFFSET : 0;
+        int bookLeft = (this.width - HOTBAR_SLOT_PLUS_RECIPE_BOOK_WIDTH) / 2 - leftOffset - HOTBAR_SLOT_PLUS_RECIPE_BOOK_TAB_WIDTH;
+        int bookTop = (this.height - HOTBAR_SLOT_PLUS_RECIPE_BOOK_HEIGHT) / 2;
+        return new int[]{
+                bookLeft,
+                bookTop,
+                bookLeft + HOTBAR_SLOT_PLUS_RECIPE_BOOK_TAB_WIDTH + HOTBAR_SLOT_PLUS_RECIPE_BOOK_WIDTH,
+                bookTop + HOTBAR_SLOT_PLUS_RECIPE_BOOK_HEIGHT
+        };
     }
 
     private void hotbarSlotPlus$renderNoSpaceWarning(DrawContext context) {
-        int centeredTop = hotbarSlotPlus$clampWarningTop(this.y + (this.backgroundHeight - HOTBAR_SLOT_PLUS_WARNING_SIZE) / 2);
+        int[] occupiedBounds = hotbarSlotPlus$occupiedBounds();
+        int centeredTop = hotbarSlotPlus$clampWarningTop(occupiedBounds[1] + (occupiedBounds[3] - occupiedBounds[1] - HOTBAR_SLOT_PLUS_WARNING_HEIGHT) / 2);
         boolean preferRight = HotbarSlotPlusConfig.get().inventoryPanelOnRight();
-        int[] placement = hotbarSlotPlus$warningPlacement(preferRight ? this.x + this.backgroundWidth + 2 : this.x - HOTBAR_SLOT_PLUS_WARNING_SIZE - 2, centeredTop);
+        int[] placement = hotbarSlotPlus$warningPlacement(preferRight ? occupiedBounds[2] + 2 : occupiedBounds[0] - HOTBAR_SLOT_PLUS_WARNING_WIDTH - 2, centeredTop);
         if (placement == null) {
-            placement = hotbarSlotPlus$warningPlacement(preferRight ? this.x - HOTBAR_SLOT_PLUS_WARNING_SIZE - 2 : this.x + this.backgroundWidth + 2, centeredTop);
+            placement = hotbarSlotPlus$warningPlacement(preferRight ? occupiedBounds[0] - HOTBAR_SLOT_PLUS_WARNING_WIDTH - 2 : occupiedBounds[2] + 2, centeredTop);
         }
         if (placement == null) {
-            placement = hotbarSlotPlus$warningPlacement(hotbarSlotPlus$clampWarningLeft(this.x + (this.backgroundWidth - HOTBAR_SLOT_PLUS_WARNING_SIZE) / 2), this.y + this.backgroundHeight + 2);
+            placement = hotbarSlotPlus$warningPlacement(hotbarSlotPlus$clampWarningLeft(occupiedBounds[0] + (occupiedBounds[2] - occupiedBounds[0] - HOTBAR_SLOT_PLUS_WARNING_WIDTH) / 2), occupiedBounds[3] + 2);
         }
         if (placement == null) {
-            placement = hotbarSlotPlus$warningPlacement(hotbarSlotPlus$clampWarningLeft(this.x + (this.backgroundWidth - HOTBAR_SLOT_PLUS_WARNING_SIZE) / 2), this.y - HOTBAR_SLOT_PLUS_WARNING_SIZE - 2);
+            placement = hotbarSlotPlus$warningPlacement(hotbarSlotPlus$clampWarningLeft(occupiedBounds[0] + (occupiedBounds[2] - occupiedBounds[0] - HOTBAR_SLOT_PLUS_WARNING_WIDTH) / 2), occupiedBounds[1] - HOTBAR_SLOT_PLUS_WARNING_HEIGHT - 2);
         }
 
-        int left = placement == null ? hotbarSlotPlus$clampWarningLeft(this.x + this.backgroundWidth - HOTBAR_SLOT_PLUS_WARNING_SIZE - HOTBAR_SLOT_PLUS_SCREEN_MARGIN) : placement[0];
-        int top = placement == null ? hotbarSlotPlus$clampWarningTop(this.y + HOTBAR_SLOT_PLUS_SCREEN_MARGIN) : placement[1];
-        context.fill(left, top, left + HOTBAR_SLOT_PLUS_WARNING_SIZE, top + 1, HOTBAR_SLOT_PLUS_WARNING_COLOR);
-        context.fill(left, top + HOTBAR_SLOT_PLUS_WARNING_SIZE - 1, left + HOTBAR_SLOT_PLUS_WARNING_SIZE, top + HOTBAR_SLOT_PLUS_WARNING_SIZE, HOTBAR_SLOT_PLUS_WARNING_COLOR);
-        context.fill(left, top, left + 1, top + HOTBAR_SLOT_PLUS_WARNING_SIZE, HOTBAR_SLOT_PLUS_WARNING_COLOR);
-        context.fill(left + HOTBAR_SLOT_PLUS_WARNING_SIZE - 1, top, left + HOTBAR_SLOT_PLUS_WARNING_SIZE, top + HOTBAR_SLOT_PLUS_WARNING_SIZE, HOTBAR_SLOT_PLUS_WARNING_COLOR);
+        int left = placement == null ? hotbarSlotPlus$clampWarningLeft(this.width / 2 - HOTBAR_SLOT_PLUS_WARNING_WIDTH / 2) : placement[0];
+        int top = placement == null ? hotbarSlotPlus$clampWarningTop(HOTBAR_SLOT_PLUS_SCREEN_MARGIN) : placement[1];
+        context.fill(left, top, left + HOTBAR_SLOT_PLUS_WARNING_WIDTH, top + HOTBAR_SLOT_PLUS_WARNING_HEIGHT, HOTBAR_SLOT_PLUS_WARNING_BACKGROUND);
+        context.fill(left, top, left + HOTBAR_SLOT_PLUS_WARNING_WIDTH, top + 2, HOTBAR_SLOT_PLUS_WARNING_COLOR);
+        context.fill(left, top + HOTBAR_SLOT_PLUS_WARNING_HEIGHT - 2, left + HOTBAR_SLOT_PLUS_WARNING_WIDTH, top + HOTBAR_SLOT_PLUS_WARNING_HEIGHT, HOTBAR_SLOT_PLUS_WARNING_COLOR);
+        context.fill(left, top, left + 2, top + HOTBAR_SLOT_PLUS_WARNING_HEIGHT, HOTBAR_SLOT_PLUS_WARNING_COLOR);
+        context.fill(left + HOTBAR_SLOT_PLUS_WARNING_WIDTH - 2, top, left + HOTBAR_SLOT_PLUS_WARNING_WIDTH, top + HOTBAR_SLOT_PLUS_WARNING_HEIGHT, HOTBAR_SLOT_PLUS_WARNING_COLOR);
+
+        Text text = Text.translatable("text.hotbar-slot-plus.inventory.no_space");
+        int textLeft = left + (HOTBAR_SLOT_PLUS_WARNING_WIDTH - this.textRenderer.getWidth(text)) / 2;
+        int textTop = top + (HOTBAR_SLOT_PLUS_WARNING_HEIGHT - this.textRenderer.fontHeight) / 2;
+        context.drawTextWithShadow(this.textRenderer, text, textLeft, textTop, HOTBAR_SLOT_PLUS_WARNING_TEXT_COLOR);
     }
 
     private int[] hotbarSlotPlus$warningPlacement(int left, int top) {
         if (left < HOTBAR_SLOT_PLUS_SCREEN_MARGIN
                 || top < HOTBAR_SLOT_PLUS_SCREEN_MARGIN
-                || left + HOTBAR_SLOT_PLUS_WARNING_SIZE > this.width - HOTBAR_SLOT_PLUS_SCREEN_MARGIN
-                || top + HOTBAR_SLOT_PLUS_WARNING_SIZE > this.height - HOTBAR_SLOT_PLUS_SCREEN_MARGIN
-                || hotbarSlotPlus$intersectsInventory(left, top, HOTBAR_SLOT_PLUS_WARNING_SIZE, HOTBAR_SLOT_PLUS_WARNING_SIZE)) {
+                || left + HOTBAR_SLOT_PLUS_WARNING_WIDTH > this.width - HOTBAR_SLOT_PLUS_SCREEN_MARGIN
+                || top + HOTBAR_SLOT_PLUS_WARNING_HEIGHT > this.height - HOTBAR_SLOT_PLUS_SCREEN_MARGIN
+                || hotbarSlotPlus$intersectsBlockedArea(left, top, HOTBAR_SLOT_PLUS_WARNING_WIDTH, HOTBAR_SLOT_PLUS_WARNING_HEIGHT)) {
             return null;
         }
 
@@ -185,14 +256,14 @@ public abstract class InventoryScreenMixin extends AbstractInventoryScreen<Playe
     private int hotbarSlotPlus$clampWarningLeft(int left) {
         return Math.max(
                 HOTBAR_SLOT_PLUS_SCREEN_MARGIN,
-                Math.min(left, this.width - HOTBAR_SLOT_PLUS_WARNING_SIZE - HOTBAR_SLOT_PLUS_SCREEN_MARGIN)
+                Math.min(left, this.width - HOTBAR_SLOT_PLUS_WARNING_WIDTH - HOTBAR_SLOT_PLUS_SCREEN_MARGIN)
         );
     }
 
     private int hotbarSlotPlus$clampWarningTop(int top) {
         return Math.max(
                 HOTBAR_SLOT_PLUS_SCREEN_MARGIN,
-                Math.min(top, this.height - HOTBAR_SLOT_PLUS_WARNING_SIZE - HOTBAR_SLOT_PLUS_SCREEN_MARGIN)
+                Math.min(top, this.height - HOTBAR_SLOT_PLUS_WARNING_HEIGHT - HOTBAR_SLOT_PLUS_SCREEN_MARGIN)
         );
     }
 }
